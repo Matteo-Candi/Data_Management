@@ -33,7 +33,24 @@ LOAD CSV WITH HEADERS FROM 'file:///C:/Users/mcm23/OneDrive/Desktop/GitHub/DataM
 MATCH (a:Athlete {name:row5.athlete}), (c:Country {name:row5.country})
 CREATE (a)-[:NATIONALITY]->(c);
 
+
 // 6_WIN_MEDAL_IN
-LOAD CSV WITH HEADERS FROM 'file:///C:/Users/mcm23/OneDrive/Desktop/GitHub/DataManagement_HWs/csv/6_WIN_MEDAL_IN.csv' AS row6
+LOAD CSV WITH HEADERS FROM 'file:///C:/Users/mcm23/OneDrive/Desktop/GitHub/DataManagement_HWs/csv/WIN_MEDAL_IN.csv' AS row6
 MATCH (a:Athlete {name:row6.athlete}), (h:Host {slug:row6.slug})
 CREATE (a)-[:WIN_MEDAL_IN {discipline: row6.discipline, event:row6.event,event_gender:row6.event_gender, medal:row6.medal,partecipant_type:row6.partecipant_type}]->(h);
+
+
+// 7_PARTECIPATE
+LOAD CSV WITH HEADERS FROM 'file:///C:/Users/mcm23/OneDrive/Desktop/GitHub/DataManagement_HWs/csv/PARTECIPATE.csv' AS row7
+MATCH (a:Athlete {name:row7.athlete}), (h:Host {slug:row7.slug})
+CREATE (a)-[:PARTECIPATE {discipline: row7.discipline, event:row7.event, partecipant_type:row7.partecipant_type, rank:row7.rank}]->(h);
+
+// Remove missing values.
+MATCH (a:Athlete)-[p:PARTECIPATE]->(h:Host) WHERE p.rank='NA' REMOVE p.rank;
+
+
+// 8_IN_TEAM_WITH
+LOAD CSV WITH HEADERS FROM 'file:///C:/Users/mcm23/OneDrive/Desktop/GitHub/DataManagement_HWs/csv/IN_TEAM_WITH.csv' AS row8
+MATCH (a1:Athlete {name:row8.athlete_1}), (a2:Athlete {name:row8.athlete_1})
+CREATE (a1)-[:IN_TEAM_WITH {discipline: row8.discipline, slug:row8.slug}]->(a2)
+CREATE (a2)-[:IN_TEAM_WITH {discipline: row8.discipline, slug:row8.slug}]->(a1);

@@ -5,6 +5,11 @@ RETURN COUNT(tot) AS italian_medals, tot.discipline
 ORDER BY italian_medals DESC;
 
 
+//2. Find the top 10 athletes that win more medals IN a single Olympic game
+MATCH(a:Athlete)-[med:WIN_MEDAL_IN]-(h:Host) 
+RETURN a.name as athlete, count(med) as num_medals, h.name as game 
+ORDER BY num_medals DESC LIMIT 10;
+
 
 // 3. Find top 5 Olympic games in which local athletes win more medals
 MATCH(c1:Country)<-[:NATIONALITY]-(a:Athlete)-[tot:WIN_MEDAL_IN]->(h:Host)-[:TAKE_PLACE_IN]->(c2:Country)

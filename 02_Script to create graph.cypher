@@ -5,7 +5,7 @@ CREATE (:Country {name:row1.name, code:row1.code});
 
 // 2_Hosts
 LOAD CSV WITH HEADERS FROM 'file:///C:/Users/mcm23/OneDrive/Desktop/GitHub/DataManagement_HWs/csv/Hosts.csv' AS row2
-CREATE (:Host {slug:row2.slug, end_date:datetime(row2.end_date), start_date:datetime(row2.start_date), location:row2.location, name:row2.name, season:row2.season, year:row2.year});
+CREATE (:Host {slug:row2.slug, end_date:datetime(row2.end_date), start_date:datetime(row2.start_date), name:row2.name, season:row2.season, year:row2.year});
 
 
 // 3_Athletes

@@ -1,0 +1,232 @@
+/* TABLES CREATION AND STRUCTURES */
+
+-- Athletes table
+CREATE TABLE athletes(
+	url VARCHAR(100) NOT NULL,
+	name VARCHAR(50) NOT NULL,
+	games_partecipations INT,
+	first_game VARCHAR(30),
+	year_birth INT,
+	gold INT,
+	silver INT,
+	bronze INT);
+
+COPY public."athletes" FROM '...\olympic_athletes1.csv' DELIMITER ';' NULL AS 'NULL' csv HEADER;
+
+SELECT * 
+FROM athletes
+LIMIT 10;
+
+
+-- Hosts table
+CREATE TABLE hosts(
+	game_slug VARCHAR(30) NOT NULL,
+	end_date DATE,
+	start_date DATE,
+	country VARCHAR(30),
+	game_name VARCHAR(30),
+	season VARCHAR(15),
+	year INT);
+
+COPY public."hosts" FROM '...\olympic_hosts.csv' DELIMITER ',' NULL AS 'NULL' csv HEADER;
+
+SELECT * 
+FROM hosts
+LIMIT 10;
+
+-- Medals table
+CREATE TABLE medals(
+	discipline VARCHAR(30),
+	game_slug VARCHAR(30),
+	event_title VARCHAR(150),
+	gender VARCHAR(20),
+	medal_type VARCHAR(10),
+	partecipant_type VARCHAR(10),
+	athlete VARCHAR(50),
+	country_name VARCHAR(50),
+	country_code VARCHAR(5));
+	
+COPY public."medals" FROM '...\olympic_medals.csv' DELIMITER ';' NULL AS 'NULL' csv HEADER;
+
+SELECT * 
+FROM medals
+LIMIT 10;
+
+
+-- Results table 
+CREATE TABLE results(
+	discipline VARCHAR(30),
+	event_title VARCHAR(150),
+	game_slug VARCHAR(30),
+	partecipant_type VARCHAR(10),
+	medal_type VARCHAR(10),
+	athletes VARCHAR(300),
+	rank_position VARCHAR(5),
+	country_name VARCHAR(50),
+	country_code VARCHAR(5));
+
+COPY public."results" FROM '...\olympic_results.csv' DELIMITER ';' NULL AS 'NULL' csv HEADER;
+
+ALTER TABLE results ADD COLUMN ids SERIAL PRIMARY KEY;
+
+
+SELECT *
+FROM results
+LIMIT 10;
+
+
+/* QUERIES */
+
+-- 1. Find how many medals Italy won IN each discipline 
+
+SELECT discipline, COUNT(medal_type) AS number_medals
+FROM medals 
+WHERE country_code = 'ITA'
+GROUP BY discipline
+ORDER BY number_medals DESC;
+
+
+
+-- 2. Find the top 10 athletes that win more medals IN a single olimpic game
+
+SELECT athlete, COUNT(*) AS number_medals
+FROM medals
+WHERE athlete IS NOT NULL
+GROUP BY athlete, game_slug
+ORDER BY number_medals DESC, athlete
+LIMIT 10;
+
+
+-- 3. Find top 5 olimpic games IN which local athletes win more medals
+
+SELECT	h.game_name, COUNT(*) AS number_of_medals, h.country
+FROM hosts AS h JOIN (SELECT game_slug, country_name
+					  FROM medals) AS m ON h.game_slug = m.game_slug
+WHERE h.country = m.country_name
+GROUP BY h.game_name, h.country
+ORDER BY number_of_medals DESC
+LIMIT 5;
+
+
+-- 4. Find the italian athletes with the most medals (~30 sec)
+
+SELECT DISTINCT name, gold, silver, bronze, COALESCE(gold, 0)+COALESCE(silver,0)+COALESCE(bronze,0) AS total, r.discipline
+FROM athletes AS a, (SELECT DISTINCT athletes, discipline
+					 FROM results) AS r
+WHERE a.name IN (SELECT athlete
+			 FROM medals
+			 WHERE country_code = 'ITA') AND r.athletes LIKE CONCAT('%', a.name,'%')
+ORDER BY total DESC
+LIMIT 10;
+
+
+-- 5. Find for each event the number of partecipants, grouping by olympic game
+
+SELECT r.discipline,r.event_title, h.game_name, COUNT(*) AS number_partecipants
+FROM results r JOIN (SELECT game_name, game_slug
+				   FROM hosts
+				   WHERE year>= 1986) AS h ON r.game_slug = h.game_slug
+GROUP BY r.discipline, r.event_title, h.game_name
+ORDER BY number_partecipants DESC;
+
+
+-- 6. Find respectively the non team AND team sports that have more medals
+
+SELECT discipline, COUNT(*) AS Number_of_medals
+FROM medals
+WHERE discipline IN (SELECT discipline
+					 FROM medals
+					 WHERE partecipant_type = 'Athlete'
+					 GROUP BY discipline
+					 ORDER BY COUNT(*) DESC LIMIT 1)
+	  OR discipline IN (SELECT discipline
+						FROM medals
+						WHERE partecipant_type = 'GameTeam'
+						GROUP BY discipline
+						ORDER BY COUNT(*) DESC LIMIT 1)
+GROUP BY discipline;
+
+
+-- 7. Find the athletes who partecipated IN both summer AND winter games 
+
+SELECT DISTINCT r.athletes AS athlete_and_url, winter.discipline AS winter_discipline, summer.discipline AS summer_discipline
+FROM results AS r, (SELECT  r1.athletes, r1.discipline
+	   FROM results AS r1 JOIN hosts AS h1 ON r1.game_slug = h1.game_slug
+	   WHERE h1.season = 'Winter'AND 
+			 r1.athletes IS NOT NULL AND
+			 r1.athletes NOT LIKE '%#NOME?%') AS winter,
+	(SELECT  r2.athletes, r2.discipline
+	   FROM results AS r2 JOIN hosts AS h2 ON r2.game_slug = h2.game_slug
+	   WHERE h2.season = 'Summer') AS summer
+WHERE r.athletes = winter.athletes AND r.athletes = summer.athletes;
+
+
+
+-- 8. Out of all the participants how many got medals AND how many didn't (more than 30 sec)
+
+SELECT athletes_w.numb AS athletes_with_medals,
+	athletes_l.numb AS athletes_without_medals,
+	athletes_l.numb + athletes_w.numb AS total_number
+FROM
+	(SELECT COUNT(*) AS numb
+		FROM athletes
+		WHERE COALESCE(gold,0) + COALESCE(silver,0) + COALESCE(bronze,0) != 0) AS athletes_w,
+	(SELECT COUNT(*) AS numb
+		FROM athletes
+		WHERE (name, url) NOT IN
+				(SELECT name, url
+				 FROM athletes
+				 WHERE COALESCE(gold,0) + COALESCE(silver,0) + COALESCE(bronze,0) != 0)) AS athletes_l;
+
+
+-- with view 
+
+CREATE VIEW winner AS 
+SELECT name, url
+FROM athletes
+WHERE COALESCE(gold,0) + COALESCE(silver,0) + COALESCE(bronze,0) != 0;
+
+
+SELECT athletes_w.numb AS athletes_with_medals,
+	athletes_l.numb AS athletes_without_medals,
+	athletes_l.numb + athletes_w.numb AS total_number
+FROM
+	(SELECT COUNT(*) AS numb
+		FROM winner) AS athletes_w,
+	(SELECT COUNT(*) AS numb
+		FROM athletes
+		WHERE (name, url) NOT IN
+				(SELECT *
+					FROM winner)) AS athletes_l;			
+	
+	
+-- 9. Find the athlete that partecipate to the MAX number of olimpic games without win anything (more than 30 sec)
+
+SELECT a.name, a.games_partecipations
+FROM athletes AS a
+WHERE (a.name,a.url) NOT IN
+			(SELECT *
+					FROM winner)
+ORDER BY games_partecipations DESC
+LIMIT 1;
+
+
+-- 10. Find the country with the most number of medals (summer + winter games)
+
+SELECT s.country, summer_medals, winter_medals, COALESCE(summer_medals, 0)+COALESCE(winter_medals,0) AS total_medals
+FROM
+	(SELECT summer.country_name AS country, COUNT(summer.medal_type) AS summer_medals
+	FROM medals AS summer
+	WHERE summer.game_slug IN (SELECT game_slug
+								FROM hosts
+								WHERE season = 'Summer')
+	GROUP BY summer.country_name) AS s
+JOIN
+	(SELECT winter.country_name AS country, COUNT(winter.medal_type) AS winter_medals
+	FROM medals AS winter
+	WHERE winter.game_slug IN (SELECT game_slug
+							   FROM hosts
+							   WHERE season = 'Winter')
+	GROUP BY winter.country_name) AS w
+ON s.country = w.country
+ORDER BY total_medals DESC;

@@ -1,80 +1,3 @@
-/* TABLES CREATION AND STRUCTURES */
-
--- Athletes table
-CREATE TABLE athletes(
-	url VARCHAR(100) NOT NULL,
-	name VARCHAR(50) NOT NULL,
-	games_partecipations INT,
-	first_game VARCHAR(30),
-	year_birth INT,
-	gold INT,
-	silver INT,
-	bronze INT);
-
-COPY public."athletes" FROM '...\olympic_athletes1.csv' DELIMITER ';' NULL AS 'NULL' csv HEADER;
-
-SELECT * 
-FROM athletes
-LIMIT 10;
-
-
--- Hosts table
-CREATE TABLE hosts(
-	game_slug VARCHAR(30) NOT NULL,
-	end_date DATE,
-	start_date DATE,
-	country VARCHAR(30),
-	game_name VARCHAR(30),
-	season VARCHAR(15),
-	year INT);
-
-COPY public."hosts" FROM '...\olympic_hosts.csv' DELIMITER ',' NULL AS 'NULL' csv HEADER;
-
-SELECT * 
-FROM hosts
-LIMIT 10;
-
--- Medals table
-CREATE TABLE medals(
-	discipline VARCHAR(30),
-	game_slug VARCHAR(30),
-	event_title VARCHAR(150),
-	gender VARCHAR(20),
-	medal_type VARCHAR(10),
-	partecipant_type VARCHAR(10),
-	athlete VARCHAR(50),
-	country_name VARCHAR(50),
-	country_code VARCHAR(5));
-	
-COPY public."medals" FROM '...\olympic_medals.csv' DELIMITER ';' NULL AS 'NULL' csv HEADER;
-
-SELECT * 
-FROM medals
-LIMIT 10;
-
-
--- Results table 
-CREATE TABLE results(
-	discipline VARCHAR(30),
-	event_title VARCHAR(150),
-	game_slug VARCHAR(30),
-	partecipant_type VARCHAR(10),
-	medal_type VARCHAR(10),
-	athletes VARCHAR(300),
-	rank_position VARCHAR(5),
-	country_name VARCHAR(50),
-	country_code VARCHAR(5));
-
-COPY public."results" FROM '...\olympic_results.csv' DELIMITER ';' NULL AS 'NULL' csv HEADER;
-
-ALTER TABLE results ADD COLUMN ids SERIAL PRIMARY KEY;
-
-
-SELECT *
-FROM results
-LIMIT 10;
-
-
 /* QUERIES */
 
 -- 1. Find how many medals Italy won IN each discipline 
@@ -87,7 +10,7 @@ ORDER BY number_medals DESC;
 
 
 
--- 2. Find the top 10 athletes that win more medals IN a single olimpic game
+-- 2. Find the top 10 athletes that win more medals IN a single Olympic game
 
 SELECT athlete, COUNT(*) AS number_medals
 FROM medals
@@ -97,7 +20,7 @@ ORDER BY number_medals DESC, athlete
 LIMIT 10;
 
 
--- 3. Find top 5 olimpic games IN which local athletes win more medals
+-- 3. Find top 5 Olympic games IN which local athletes win more medals
 
 SELECT	h.game_name, COUNT(*) AS number_of_medals, h.country
 FROM hosts AS h JOIN (SELECT game_slug, country_name
@@ -108,7 +31,7 @@ ORDER BY number_of_medals DESC
 LIMIT 5;
 
 
--- 4. Find the italian athletes with the most medals (~30 sec)
+-- 4. Find the Italian athletes with the most medals (~30 sec)
 
 SELECT DISTINCT name, gold, silver, bronze, COALESCE(gold, 0)+COALESCE(silver,0)+COALESCE(bronze,0) AS total, r.discipline
 FROM athletes AS a, (SELECT DISTINCT athletes, discipline
@@ -120,7 +43,7 @@ ORDER BY total DESC
 LIMIT 10;
 
 
--- 5. Find for each event the number of partecipants, grouping by olympic game
+-- 5. Find for each event the number of participants, grouping by Olympic game
 
 SELECT r.discipline,r.event_title, h.game_name, COUNT(*) AS number_partecipants
 FROM results r JOIN (SELECT game_name, game_slug
@@ -130,7 +53,7 @@ GROUP BY r.discipline, r.event_title, h.game_name
 ORDER BY number_partecipants DESC;
 
 
--- 6. Find respectively the non team AND team sports that have more medals
+-- 6. Find respectively the non-team AND team sports that have more medals
 
 SELECT discipline, COUNT(*) AS Number_of_medals
 FROM medals
@@ -147,7 +70,7 @@ WHERE discipline IN (SELECT discipline
 GROUP BY discipline;
 
 
--- 7. Find the athletes who partecipated IN both summer AND winter games 
+-- 7. Find the athletes who participated IN both summer AND winter games 
 
 SELECT DISTINCT r.athletes AS athlete_and_url, winter.discipline AS winter_discipline, summer.discipline AS summer_discipline
 FROM results AS r, (SELECT  r1.athletes, r1.discipline
@@ -200,7 +123,7 @@ FROM
 					FROM winner)) AS athletes_l;			
 	
 	
--- 9. Find the athlete that partecipate to the MAX number of olimpic games without win anything (more than 30 sec)
+-- 9. Find the athlete that participates to the MAX number of Olympic games without winning anything (more than 30 sec)
 
 SELECT a.name, a.games_partecipations
 FROM athletes AS a

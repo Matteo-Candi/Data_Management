@@ -15,5 +15,9 @@ ORDER BY num_medals DESC LIMIT 10;
 MATCH(c1:Country)<-[:NATIONALITY]-(a:Athlete)-[tot:WIN_MEDAL_IN]->(h:Host)-[:TAKE_PLACE_IN]->(c2:Country)
 WHERE c1 = c2
 RETURN COUNT(*) AS local_medals, h.name AS host, c1.name AS country
-ORDER BY local_medals DESC
-LIMIT 5;
+ORDER BY local_medals DESC LIMIT 5;
+
+// 4. Find the Italian athletes with the most medals
+MATCH (h:Host) <-[med:WIN_MEDAL_IN] - (a:Athlete)-[:NATIONALITY] -> (c:Country{name:'Italy'})
+RETURN a.name as athlete, a.url as url, count(med) as num_medals
+ORDER BY num_medals DESC;

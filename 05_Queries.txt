@@ -24,9 +24,30 @@ ORDER BY num_medals DESC;
 
 // 6. Find respectively the non-team AND team sports that have more medals
 MATCH (h:Host) - [med:WIN_MEDAL_IN {partecipant_type:'GameTeam'}] - (a:Athlete) - [team:IN_TEAM_WITH] - (a1:Athlete)
-RETURN count(*) as medals, med.discipline as discipline
+RETURN count(*) as medals, med.discipline as discipline, med.partecipant_type as partecipant_type
 ORDER BY medals DESC LIMIT 1
 UNION
 MATCH (h1:Host) - [med1:WIN_MEDAL_IN {partecipant_type:'Athlete'}] - (a2:Athlete) 
-RETURN count(*) as medals,  med1.discipline as discipline
+RETURN count(*) as medals,  med1.discipline as discipline, med1.partecipant_type as partecipant_type
 ORDER BY medals DESC LIMIT 1
+
+// 8.  Out of all the participants how many got medals AND how many didn't 
+MATCH (a:Athlete)
+WHERE NOT EXISTS ((a)-[:WIN_MEDAL_IN]-()) 
+RETURN COUNT(a) AS count
+UNION
+MATCH (a:Athlete)
+WHERE EXISTS ((a)-[:WIN_MEDAL_IN]-()) 
+RETURN COUNT(a) AS count
+UNION
+MATCH (a:Athlete)
+RETURN COUNT(a) AS count
+
+
+// 10. Find the country with the most number of medals (summer + winter games)
+
+# TODO Cercare modo per fare distinzione fra giochi estivi e invernali per ora
+
+MATCH  (c:Country) <- [:NATIONALITY] - (a:Athlete) - [m:WIN_MEDAL_IN] -> (h:Host)
+RETURN c.name, count(m) as won_medals
+ORDER BY won_medals DESC LIMIT 10;

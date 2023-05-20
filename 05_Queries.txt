@@ -61,6 +61,14 @@ MATCH (a:Athlete)
 RETURN COUNT(a) AS count
 
 
+//9. Find the athlete that partecipate to the MAX number of olimpic games without win anything 
+MATCH(a:Athlete)
+WITH toInteger(a.G) + toInteger(a.S) + toInteger(a.B) AS medals_number, a
+WHERE medals_number = 0 and a.partecipations > '5'
+RETURN a.name AS athlete, a.partecipations AS partecipations
+ORDER BY partecipations DESC
+LIMIT 1;
+
 
 // 10. Find the country with the most number of medals (summer + winter games)
 

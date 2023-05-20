@@ -22,6 +22,12 @@ MATCH (h:Host) <-[med:WIN_MEDAL_IN] - (a:Athlete)-[:NATIONALITY] -> (c:Country{n
 RETURN a.name as athlete, a.url as url, count(med) as num_medals
 ORDER BY num_medals DESC;
 
+// 5. Find for each event the number of participants, grouping by Olympic game
+MATCH(:Athlete)-[p:PARTECIPATE]->(h:Host)
+WHERE h.year >= '1986'
+RETURN COUNT(p) AS partecipants, p.discipline AS discipline, p.event AS event, h.name AS host
+ORDER BY partecipants DESC;
+
 // 6. Find respectively the non-team AND team sports that have more medals
 MATCH (h:Host) - [med:WIN_MEDAL_IN {partecipant_type:'GameTeam'}] - (a:Athlete) - [team:IN_TEAM_WITH] - (a1:Athlete)
 RETURN count(*) as medals, med.discipline as discipline, med.partecipant_type as partecipant_type

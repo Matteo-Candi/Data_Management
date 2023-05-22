@@ -11,7 +11,7 @@ RETURN a.name as athlete, a.url as url, count(med) as num_medals, h.name as game
 ORDER BY num_medals DESC LIMIT 10;
 
 
-// 3. Find top 5 Olympic games in which local athletes win more medals
+// 3. Find the top 5 Olympic games in which local athletes win more medals
 MATCH(c1:Country)<-[:NATIONALITY]-(a:Athlete)-[tot:WIN_MEDAL_IN]->(h:Host)-[:TAKE_PLACE_IN]->(c2:Country)
 WHERE c1 = c2
 RETURN COUNT(*) AS local_medals, h.name AS host, c1.name AS country
@@ -27,7 +27,7 @@ ORDER BY num_medals DESC;
 // 5. Find for each event the number of participants, grouping by Olympic game
 MATCH(:Athlete)-[p:PARTECIPATE]->(h:Host)
 WHERE h.year >= '1986'
-RETURN COUNT(p) AS partecipants, p.discipline AS discipline, p.event AS event, h.name AS host
+RETURN COUNT(p) AS participants, p.discipline AS discipline, p.event AS event, h.name AS host
 ORDER BY partecipants DESC;
 
 
@@ -41,7 +41,7 @@ RETURN count(*) as medals,  med1.discipline as discipline, med1.partecipant_type
 ORDER BY medals DESC LIMIT 1
 
 
-// 7. Find the athletes who partecipated in both summer and winter games
+// 7. Find the athletes who participated in both summer and winter games
 MATCH(h1:Host)<-[p1:PARTECIPATE]-(a:Athlete)-[p2:PARTECIPATE]->(h2:Host)
 WHERE h1.season = 'Winter' AND h2.season = 'Summer'
 RETURN DISTINCT a.name AS athlete, p1.discipline AS winter_discipline, p2.discipline AS summer_discipline
@@ -61,11 +61,11 @@ MATCH (a:Athlete)
 RETURN COUNT(a) AS count
 
 
-//9. Find the athlete that partecipate to the MAX number of olimpic games without win anything 
+//9. Find the athlete that participate to the MAX number of Olympic games without winning anything 
 MATCH(a:Athlete)
 WITH toInteger(a.G) + toInteger(a.S) + toInteger(a.B) AS medals_number, a
 WHERE medals_number = 0 and a.partecipations > '5'
-RETURN a.name AS athlete, a.partecipations AS partecipations
+RETURN a.name AS athlete, a.partecipations AS participations
 ORDER BY partecipations DESC
 LIMIT 1;
 

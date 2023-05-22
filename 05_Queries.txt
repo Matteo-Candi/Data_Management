@@ -19,9 +19,17 @@ ORDER BY local_medals DESC LIMIT 5;
 
 
 // 4. Find the Italian athletes with the most medals
+
+// v1 usando archi
 MATCH (h:Host) <-[med:WIN_MEDAL_IN] - (a:Athlete)-[:NATIONALITY] -> (c:Country{name:'Italy'})
 RETURN a.name as athlete, a.url as url, count(med) as num_medals
 ORDER BY num_medals DESC;
+
+// v2 usando attributi dei nodi (stesso risultato di SQL)
+MATCH (a:Athlete) - [:NATIONALITY] - (c:Country{name: 'Italy' })
+WITH toInteger(a.G) + toInteger(a.S) + toInteger(a.B) AS medals_number, a
+RETURN a.name AS athlete, medals_number
+ORDER BY medals_number DESC;
 
 
 // 5. Find for each event the number of participants, grouping by Olympic game
@@ -31,14 +39,17 @@ RETURN COUNT(p) AS participants, p.discipline AS discipline, p.event AS event, h
 ORDER BY partecipants DESC;
 
 
-// 6. Find respectively the non-team AND team sports that have more medals
+// 6. Find respectively the non-team AND team sports that have more medals 
+
+// Rultato diverso su SQL prima sport di gruppo era canottaggio ora vela
+
 MATCH (h:Host) - [med:WIN_MEDAL_IN {partecipant_type:'GameTeam'}] - (a:Athlete) - [team:IN_TEAM_WITH] - (a1:Athlete)
 RETURN count(*) as medals, med.discipline as discipline, med.partecipant_type as partecipant_type
 ORDER BY medals DESC LIMIT 1
 UNION
 MATCH (h1:Host) - [med1:WIN_MEDAL_IN {partecipant_type:'Athlete'}] - (a2:Athlete) 
 RETURN count(*) as medals,  med1.discipline as discipline, med1.partecipant_type as partecipant_type
-ORDER BY medals DESC LIMIT 1
+ORDER BY medals DESC LIMIT 1;
 
 
 // 7. Find the athletes who participated in both summer and winter games
@@ -49,6 +60,8 @@ ORDER BY athlete;
 
 
 // 8.  Out of all the participants how many got medals AND how many didn't 
+
+// v1 usando archi
 MATCH (a:Athlete)
 WHERE NOT EXISTS ((a)-[:WIN_MEDAL_IN]-()) 
 RETURN COUNT(a) AS count
@@ -58,7 +71,21 @@ WHERE EXISTS ((a)-[:WIN_MEDAL_IN]-())
 RETURN COUNT(a) AS count
 UNION
 MATCH (a:Athlete)
+RETURN COUNT(a) AS count;
+
+// v2 usando attributi dei nodi (stesso risultato di SQL)
+MATCH (a:Athlete)
+WITH toInteger(a.G) + toInteger(a.S) + toInteger(a.B) AS medals_number, a
+WHERE NOT medals_number<>0
 RETURN COUNT(a) AS count
+UNION
+MATCH (a:Athlete)
+WITH toInteger(a.G) + toInteger(a.S) + toInteger(a.B) AS medals_number, a
+WHERE NOT medals_number = 0
+RETURN COUNT(a) AS count
+UNION
+MATCH (a:Athlete)
+RETURN COUNT(a) AS count;
 
 
 //9. Find the athlete that participate to the MAX number of Olympic games without winning anything 
@@ -72,7 +99,7 @@ LIMIT 1;
 
 // 10. Find the country with the most number of medals (summer + winter games)
 
-# TODO Cercare modo per fare distinzione fra giochi estivi e invernali per ora
+// Cercare modo per fare distinzione fra giochi estivi e invernali per ora
 
 MATCH  (c:Country) <- [:NATIONALITY] - (a:Athlete) - [m:WIN_MEDAL_IN] -> (h:Host)
 RETURN c.name, count(m) as won_medals

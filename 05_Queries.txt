@@ -32,9 +32,6 @@ ORDER BY participants DESC;
 
 
 // 6. Find respectively the non-team AND team sports that have more medals 
-
-// Rultato diverso su SQL prima sport di gruppo era canottaggio ora vela
-
 MATCH (h:Host) - [med:WIN_MEDAL_IN {partecipant_type:'GameTeam'}] - (a:Athlete) - [team:IN_TEAM_WITH] - (a1:Athlete)
 RETURN count(*) as medals, med.discipline as discipline, med.partecipant_type as partecipant_type
 ORDER BY medals DESC LIMIT 1

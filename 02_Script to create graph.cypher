@@ -55,7 +55,7 @@ MATCH (a:Athlete)-[p:PARTECIPATE]->(h:Host) WHERE p.rank='NA' REMOVE p.rank;
 // 8_IN_TEAM_WITH
 CALL apoc.periodic.iterate(
 'LOAD CSV WITH HEADERS FROM "file:///C:/Users/mcm23/OneDrive/Desktop/GitHub/DataManagement_HWs/csv/IN_TEAM_WITH.csv" AS row8 RETURN row8', 
-'WITH row8 MATCH (a1:Athlete {name:row8.athlete_1}), (a2:Athlete {name:row8.athlete_1}) CREATE (a1)-[:IN_TEAM_WITH {discipline: row8.discipline, slug:row8.slug}]->(a2) CREATE (a2)-[:IN_TEAM_WITH {discipline: row8.discipline, slug:row8.slug}]->(a1)',
+'WITH row8 MATCH (a1:Athlete {name:row8.athlete_1}), (a2:Athlete {name:row8.athlete_2}) CREATE (a1)-[:IN_TEAM_WITH {discipline: row8.discipline, slug:row8.slug}]->(a2) CREATE (a2)-[:IN_TEAM_WITH {discipline: row8.discipline, slug:row8.slug}]->(a1)',
 {batchSize:1000, parallel:true});
 
 

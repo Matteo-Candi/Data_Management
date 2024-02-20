@@ -6,7 +6,7 @@ This repository showcases a comprehensive exploration of data transformation fro
 
 ### Data Querying with SQL:
 
-- Utilized SQL to query data from a relational database, extracting valuable insights using `SELECT` statements, `JOIN` operations, and `WHERE` clauses.
+- Utilized SQL to query data from a relational database, extracting valuable insights.
 - Examined the power of relational databases for structured data storage and retrieval.
 
 ### Graph Database Migration with Neo4j:
